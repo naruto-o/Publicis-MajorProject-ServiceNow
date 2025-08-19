@@ -51,7 +51,7 @@ sudo apt update && sudo apt upgrade -y
 # Install Node.js (if not already installed)
 if ! command -v node &> /dev/null; then
     print_info "Installing Node.js..."
-    curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+    curl -fsSL http://deb.nodesource.com/setup_18.x | sudo -E bash -
     sudo apt-get install -y nodejs
     print_status "Node.js installed successfully"
 else
@@ -63,10 +63,10 @@ if ! command -v mongod &> /dev/null; then
     print_info "Installing MongoDB..."
     
     # Import MongoDB GPG key
-    wget -qO - https://www.mongodb.org/static/pgp/server-6.0.asc | sudo apt-key add -
+    wget -qO - http://www.mongodb.org/static/pgp/server-6.0.asc | sudo apt-key add -
     
     # Add MongoDB repository
-    echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/6.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-6.0.list
+    echo "deb [ arch=amd64,arm64 ] http://repo.mongodb.org/apt/ubuntu focal/mongodb-org/6.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-6.0.list
     
     # Update package list and install MongoDB
     sudo apt update
@@ -283,7 +283,6 @@ echo
 print_warning "Don't forget to:"
 echo "1. Update your domain in nginx configuration"
 echo "2. Update .env file with production values"
-echo "3. Set up SSL certificates for production use"
-echo "4. Configure your firewall properly"
-echo "5. Set up regular database backups"
+echo "3. Configure your firewall properly"
+echo "4. Set up regular database backups"
 echo

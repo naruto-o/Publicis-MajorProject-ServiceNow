@@ -56,7 +56,7 @@ module.exports = {
       user: 'ubuntu', // Change to your Linux user
       host: 'your-server-ip', // Change to your server IP
       ref: 'origin/main',
-      repo: 'https://github.com/your-username/inventory-management.git', // Change to your repo
+      repo: 'http://github.com/your-username/inventory-management.git', // Change to your repo
       path: '/var/www/inventory-app',
       'post-deploy': 'npm install && cp .env.production .env && npm run build && pm2 reload ecosystem.config.js --env production && pm2 save',
       
