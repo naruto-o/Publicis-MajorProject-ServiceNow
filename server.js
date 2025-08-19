@@ -3,13 +3,36 @@ const path = require("path");
 const bodyParser = require("body-parser");
 const cors = require('cors');
 const helmet = require('helmet');
+const fs = require('fs');
 
 const session = require('express-session');
 const { body, validationResult } = require('express-validator');
 const http = require('http');
 const socketIo = require('socket.io');
 
+// Load environment variables
+require('dotenv').config();
+
 const app = express();
+
+// Create necessary directories for Linux deployment
+const createDirectories = () => {
+  const dirs = [
+    path.join(__dirname, 'logs'),
+    path.join(__dirname, 'uploads'),
+    path.join(__dirname, 'temp')
+  ];
+  
+  dirs.forEach(dir => {
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+      console.log(`📁 Created directory: ${dir}`);
+    }
+  });
+};
+
+// Create directories on startup
+createDirectories();
 app.use(
   helmet.contentSecurityPolicy({
     directives: {
@@ -29,10 +52,36 @@ const io = socketIo(server, {
 });
 
 const PORT = process.env.PORT || 3000;
-const connectDB = require("./db");
+const HOST = process.env.HOST || '0.0.0.0'; // Bind to all interfaces for Linux
+const { connectDB } = require("./db");
 
-// Connect to MongoDB
-connectDB();
+// Enhanced error handling for production
+process.on('uncaughtException', (err) => {
+  console.error('🔥 Uncaught Exception:', err);
+  console.error('Shutting down gracefully...');
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (err, promise) => {
+  console.error('🔥 Unhandled Promise Rejection:', err);
+  console.error('Shutting down gracefully...');
+  server.close(() => {
+    process.exit(1);
+  });
+});
+
+// Connect to MongoDB with retry logic
+const initializeDatabase = async () => {
+  try {
+    await connectDB();
+  } catch (error) {
+    console.error('❌ Failed to connect to database:', error);
+    console.log('🔄 Retrying database connection in 5 seconds...');
+    setTimeout(initializeDatabase, 5000);
+  }
+};
+
+initializeDatabase();
 
 // Security middleware
 app.use(helmet({
@@ -210,8 +259,38 @@ io.on('connection', (socket) => {
   });
 });
 
-// Start server
-server.listen(PORT, () => {
-  console.log(`✅ Server running at http://localhost:${PORT}`);
+// Graceful shutdown handler for Linux
+const gracefulShutdown = (signal) => {
+  console.log(`\n📴 Received ${signal}. Shutting down gracefully...`);
+  
+  server.close(() => {
+    console.log('🔌 HTTP server closed.');
+    
+    // Close database connection
+    require('mongoose').connection.close(() => {
+      console.log('💾 Database connection closed.');
+      console.log('👋 Process terminated gracefully.');
+      process.exit(0);
+    });
+  });
+  
+  // Force close after 30 seconds
+  setTimeout(() => {
+    console.error('⚡ Forceful shutdown after timeout');
+    process.exit(1);
+  }, 30000);
+};
+
+// Listen for termination signals (Linux)
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
+// Start server - bind to all interfaces for Linux hosting
+server.listen(PORT, HOST, () => {
+  console.log(`✅ Server running on ${HOST}:${PORT}`);
+  console.log(`🌐 Access via: http://${HOST === '0.0.0.0' ? 'your-server-ip' : HOST}:${PORT}`);
   console.log(`🚀 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`💾 MongoDB: ${process.env.MONGODB_URI || 'mongodb://localhost:27017/inventorydb'}`);
+  console.log(`📁 Logs directory: ${path.join(__dirname, 'logs')}`);
+  console.log(`📂 Uploads directory: ${path.join(__dirname, 'uploads')}`);
 });

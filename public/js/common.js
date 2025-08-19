@@ -210,14 +210,32 @@ class InventoryApp {
     }
   }
 
-  // API utility functions
+  // API utility functions with dynamic host detection
+  getBaseUrl() {
+    // Automatically detect the current host and protocol for production
+    if (typeof window !== 'undefined') {
+      return `${window.location.protocol}//${window.location.host}`;
+    }
+    // Fallback for server-side or non-browser environments
+    return process.env.NODE_ENV === 'production' 
+      ? 'https://your-domain.com' 
+      : 'http://localhost:3000';
+  }
+
   async apiCall(endpoint, options = {}) {
     try {
-      const response = await fetch(`/api${endpoint}`, {
+      const baseUrl = this.getBaseUrl();
+      const url = `${baseUrl}/api${endpoint}`;
+      
+      console.log(`🌐 API Call: ${options.method || 'GET'} ${url}`);
+      
+      const response = await fetch(url, {
         headers: {
           'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
           ...options.headers
         },
+        credentials: 'same-origin', // Important for session management
         ...options
       });
 
