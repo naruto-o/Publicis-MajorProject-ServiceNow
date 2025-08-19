@@ -210,16 +210,14 @@ class InventoryApp {
     }
   }
 
-  // API utility functions with dynamic host detection
+  // API utility functions with HTTP-only detection
   getBaseUrl() {
-    // Automatically detect the current host and protocol for production
+    // Always use HTTP for current setup
     if (typeof window !== 'undefined') {
-      return `${window.location.protocol}//${window.location.host}`;
+      return `http://${window.location.host}`;
     }
-    // Fallback for server-side or non-browser environments
-    return process.env.NODE_ENV === 'production' 
-      ? 'https://your-domain.com' 
-      : 'http://localhost:3000';
+    // Fallback for server-side environments
+    return 'http://localhost:3000';
   }
 
   async apiCall(endpoint, options = {}) {

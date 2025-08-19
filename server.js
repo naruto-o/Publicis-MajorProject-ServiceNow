@@ -1,12 +1,9 @@
 const express = require("express");
 const path = require("path");
 const bodyParser = require("body-parser");
-const cors = require('cors');
-const helmet = require('helmet');
 const fs = require('fs');
 
 const session = require('express-session');
-const { body, validationResult } = require('express-validator');
 const http = require('http');
 const socketIo = require('socket.io');
 
@@ -33,21 +30,12 @@ const createDirectories = () => {
 
 // Create directories on startup
 createDirectories();
-app.use(
-  helmet.contentSecurityPolicy({
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'"],   // ✅ allow onclick
-      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com"],
-      fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com"],
-    },
-  })
-);
+
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
     origin: "*",
-    methods: ["GET", "POST"]
+    methods: ["GET", "POST", "PUT", "DELETE"]
   }
 });
 
@@ -83,29 +71,13 @@ const initializeDatabase = async () => {
 
 initializeDatabase();
 
-// Security middleware
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-      fontSrc: ["'self'", "https://fonts.gstatic.com"],
-      scriptSrc: ["'self'", "'unsafe-inline'"],
-      imgSrc: ["'self'", "data:", "https:"],
-    },
-  },
-}));
-
-// CORS middleware
-app.use(cors());
-
 // Session middleware
 app.use(session({
   secret: process.env.SESSION_SECRET || 'inventory-management-secret-key',
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: process.env.NODE_ENV === 'production',
+    secure: false,  // Always false for HTTP
     maxAge: 24 * 60 * 60 * 1000 // 24 hours
   }
 }));

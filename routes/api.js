@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const { body, validationResult } = require('express-validator');
 
 // Models
 const Inventory = require('../models/Inventory');
@@ -8,18 +7,6 @@ const Transaction = require('../models/Transaction');
 const Alert = require('../models/Alert');
 const Category = require('../models/Category');
 const Supplier = require('../models/Supplier');
-
-// Validation middleware
-const handleValidationErrors = (req, res, next) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ 
-      success: false, 
-      errors: errors.array() 
-    });
-  }
-  next();
-};
 
 // INVENTORY ROUTES
 
@@ -89,15 +76,7 @@ router.get('/inventory/:id', async (req, res) => {
 });
 
 // Create new inventory item
-router.post('/inventory', [
-  body('sku').notEmpty().withMessage('SKU is required'),
-  body('name').notEmpty().withMessage('Name is required'),
-  body('category').notEmpty().withMessage('Category is required'),
-  body('type').isIn(['Raw Material', 'Finished Product', 'Work in Progress', 'Consumable']),
-  body('unit').notEmpty().withMessage('Unit is required'),
-  body('minThreshold').isNumeric().withMessage('Min threshold must be a number'),
-  body('qtyOnHand').isNumeric().withMessage('Quantity on hand must be a number')
-], handleValidationErrors, async (req, res) => {
+router.post('/inventory', async (req, res) => {
   try {
     const inventoryData = {
       ...req.body,
@@ -139,11 +118,7 @@ router.post('/inventory', [
 });
 
 // Update inventory item
-router.put('/inventory/:id', [
-  body('name').optional().notEmpty(),
-  body('minThreshold').optional().isNumeric(),
-  body('qtyOnHand').optional().isNumeric()
-], handleValidationErrors, async (req, res) => {
+router.put('/inventory/:id', async (req, res) => {
   try {
     const oldItem = await Inventory.findById(req.params.id);
     if (!oldItem) {
@@ -326,10 +301,7 @@ router.get('/categories', async (req, res) => {
 });
 
 // Create category
-router.post('/categories', [
-  body('name').notEmpty().withMessage('Name is required'),
-  body('code').notEmpty().withMessage('Code is required')
-], handleValidationErrors, async (req, res) => {
+router.post('/categories', async (req, res) => {
   try {
     const category = new Category({
       ...req.body,
@@ -361,10 +333,7 @@ router.get('/suppliers', async (req, res) => {
 });
 
 // Create supplier
-router.post('/suppliers', [
-  body('name').notEmpty().withMessage('Name is required'),
-  body('code').notEmpty().withMessage('Code is required')
-], handleValidationErrors, async (req, res) => {
+router.post('/suppliers', async (req, res) => {
   try {
     const supplier = new Supplier({
       ...req.body,

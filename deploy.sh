@@ -197,15 +197,12 @@ EOF
     fi
 fi
 
-# Set up firewall (if ufw is available)
+# Simple firewall setup (optional)
 if command -v ufw &> /dev/null; then
-    print_info "Configuring firewall..."
-    sudo ufw allow ssh
-    sudo ufw allow 80
-    sudo ufw allow 443
-    sudo ufw allow 3000  # For direct access if needed
-    echo "y" | sudo ufw enable
-    print_status "Firewall configured"
+    print_info "Setting up basic firewall..."
+    sudo ufw allow 22    # SSH
+    sudo ufw allow 3000  # Application port
+    print_status "Basic firewall configured"
 fi
 
 # Seed the database (optional)
