@@ -12,7 +12,7 @@ pipeline {
             steps {
                 git credentialsId: 'github_credentials',
                     branch: 'master',
-                    url: 'https://github.com/naruto-o/Publicis_MajorProject_Devops_InventoryManagement.git'
+                    url: 'https://github.com/naruto-o/Publicis-MajorProject-ServiceNow.git'
             }
         }
  
@@ -39,11 +39,11 @@ pipeline {
  
         stage('Deploy to Kubernetes') {
             steps {
-                withAWS(credentials: 'aws-eks-creds', region: 'ap-south-1') {
+                withAWS(credentials: 'aws-eks-creds', region: 'us-west-2') {
                     script {
                         sh """
                             echo "🔄 Updating kubeconfig..."
-                            aws eks update-kubeconfig --region ap-south-1 --name shikhar-test-cluster
+                            aws eks update-kubeconfig --region us-west-2 --name shikhar-cluster
  
                             echo "🚀 Updating deployment image in Kubernetes..."
                             kubectl set image deployment/inventory-app \
